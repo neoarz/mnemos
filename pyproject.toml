@@ -1,0 +1,47 @@
+[project]
+name = "mnemos"
+version = "0.1.0"
+description = "A clean Python application scaffold for mnemos."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "aiohttp>=3.13.5",
+    "discord-py>=2.7.1",
+    "python-dotenv>=1.2.2",
+]
+
+[project.scripts]
+mnemos = "mnemos.cli:main"
+check = "mnemos.dev:check"
+typecheck = "mnemos.dev:typecheck"
+lint = "mnemos.dev:lint"
+format = "mnemos.dev:format"
+test = "mnemos.dev:test"
+
+[build-system]
+requires = ["uv_build>=0.11.3,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "ruff>=0.15.10",
+    "ty>=0.0.29",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py314"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ty.src]
+include = ["src/**/*.py", "tests/**/*.py"]

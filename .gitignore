@@ -1,0 +1,38 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.coverage
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+
+# Virtual environments
+.venv/
+
+# Environment / secrets
+.env
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Runtime state
+.mnemos/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Type checker cache
+.mypy_cache/
+.ty_cache/
+
+# Python version managers
+.python-version
