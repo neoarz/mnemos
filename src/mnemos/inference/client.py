@@ -7,7 +7,7 @@ from typing import cast
 import aiohttp
 
 from mnemos.app.errors import InferenceError
-from mnemos.inference.constants import CHAT_COMPLETIONS_PATH
+from mnemos.inference.constants import CHAT_COMPLETIONS_PATH, MODELS_PATH
 from mnemos.inference.messages import ChatMessage
 
 
@@ -52,6 +52,10 @@ class DigitalOceanInferenceClient:
             f"refusal={refusal!r}, tool_calls present={tool_calls is not None})"
         )
 
+    async def list_models(self) -> list[str]:
+        data = await self._request_json("GET", MODELS_PATH)
+        return _model_ids_from_response(data)
+
     async def _request_json(
         self,
         method: str,
@@ -95,6 +99,21 @@ def _assistant_text(message: Mapping[str, object]) -> str:
     if isinstance(refusal, str) and refusal.strip():
         return refusal.strip()
     return ""
+
+
+def _model_ids_from_response(data: object) -> list[str]:
+    root = _as_mapping(data, "models response")
+    rows = _as_sequence(root.get("data"), "models data")
+    model_ids: list[str] = []
+    for row in rows:
+        model = _as_mapping(row, "model")
+        model_id = model.get("id")
+        if not isinstance(model_id, str) or not model_id.strip():
+            raise InferenceError("Invalid model id")
+        model_ids.append(model_id.strip())
+    if not model_ids:
+        raise InferenceError("DigitalOcean returned no models")
+    return sorted(set(model_ids))
 
 
 def _coerce_content_to_text(raw: object) -> str:
