@@ -1,7 +1,7 @@
 [project]
 name = "mnemos"
 version = "0.1.0"
-description = "A clean Python application scaffold for mnemos."
+description = "Alone at the edge of the universe humming a tune"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [

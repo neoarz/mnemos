@@ -11,27 +11,27 @@ from mnemos.storage import SQLiteSettingsStore
 def test_sqlite_settings_store_uses_default_when_db_missing(tmp_path: Path) -> None:
     store = SQLiteSettingsStore(
         path=tmp_path / "state.db",
-        default_active_model="kimi-k2.6",
+        default_active_model="gpt-4o",
     )
 
-    assert store.get_active_model() == "kimi-k2.6"
+    assert store.get_active_model() == "gpt-4o"
 
 
 def test_sqlite_settings_store_persists_and_retrieves_model(tmp_path: Path) -> None:
     store = SQLiteSettingsStore(
         path=tmp_path / "state.db",
-        default_active_model="kimi-k2.6",
+        default_active_model="gpt-4o",
     )
 
-    store.set_active_model("llama3.3-70b-instruct")
+    store.set_active_model("gpt-4o-mini")
 
-    assert store.get_active_model() == "llama3.3-70b-instruct"
+    assert store.get_active_model() == "gpt-4o-mini"
 
 
 def test_sqlite_settings_store_rejects_empty_model(tmp_path: Path) -> None:
     store = SQLiteSettingsStore(
         path=tmp_path / "state.db",
-        default_active_model="kimi-k2.6",
+        default_active_model="gpt-4o",
     )
 
     with pytest.raises(StorageError, match="active model cannot be empty"):

@@ -39,5 +39,5 @@ def test_model_ids_from_response_reads_openai_compatible_payload() -> None:
 
 
 def test_model_ids_from_response_requires_non_empty_result() -> None:
-    with pytest.raises(InferenceError, match="no models"):
+    with pytest.raises(InferenceError, match="No models returned"):
         _model_ids_from_response({"data": []})

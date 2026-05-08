@@ -6,7 +6,7 @@ import aiohttp
 
 from mnemos.config import Settings
 from mnemos.discord import MnemosDiscordClient
-from mnemos.inference import DigitalOceanInferenceClient, ModelManager
+from mnemos.inference import InferenceClient, ModelManager
 from mnemos.storage import SQLiteSettingsStore
 
 log = logging.getLogger("mnemos")
@@ -16,13 +16,13 @@ async def run() -> None:
     settings = Settings.from_env()
     settings_store = SQLiteSettingsStore(
         path=settings.mnemos_state_path,
-        default_active_model=settings.digitalocean_default_model,
+        default_active_model=settings.openai_default_model,
     )
     active_model = settings_store.get_active_model()
     async with aiohttp.ClientSession() as session:
-        inference_client = DigitalOceanInferenceClient(
-            base_url=settings.digitalocean_inference_url,
-            model_access_key=settings.digitalocean_model_access_key,
+        inference_client = InferenceClient(
+            base_url=settings.openai_base_url,
+            api_key=settings.openai_api_key,
             session=session,
         )
         model_manager = ModelManager(active_model=active_model)

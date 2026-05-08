@@ -10,14 +10,12 @@ from dotenv import load_dotenv
 from mnemos.app.errors import ConfigError
 from mnemos.config.constants import (
     DEFAULT_CONTEXT_MESSAGES,
-    DEFAULT_INFERENCE_URL,
     DEFAULT_MAX_COMPLETION_TOKENS,
-    DEFAULT_MODEL,
     DEFAULT_STATE_PATH,
     DEFAULT_TEMPERATURE,
-    ENV_DIGITALOCEAN_DEFAULT_MODEL,
-    ENV_DIGITALOCEAN_INFERENCE_URL,
-    ENV_DIGITALOCEAN_MODEL_ACCESS_KEY,
+    ENV_OPENAI_API_KEY,
+    ENV_OPENAI_BASE_URL,
+    ENV_OPENAI_DEFAULT_MODEL,
     ENV_DISCORD_GUILD_ID,
     ENV_DISCORD_TOKEN,
     ENV_MAX_COMPLETION_TOKENS,
@@ -32,10 +30,10 @@ from mnemos.config.constants import (
 @dataclass(frozen=True, slots=True)
 class Settings:
     discord_token: str
-    digitalocean_model_access_key: str
+    openai_api_key: str
+    openai_base_url: str
+    openai_default_model: str
     discord_guild_id: int | None = None
-    digitalocean_inference_url: str = DEFAULT_INFERENCE_URL
-    digitalocean_default_model: str = DEFAULT_MODEL
     mnemos_admin_user_ids: frozenset[int] = frozenset()
     mnemos_allow_discord_admins: bool = True
     mnemos_state_path: Path = Path(DEFAULT_STATE_PATH)
@@ -55,22 +53,16 @@ class Settings:
 
         values = os.environ if env is None else env
         discord_token = _required(values, ENV_DISCORD_TOKEN)
-        model_access_key = _required(values, ENV_DIGITALOCEAN_MODEL_ACCESS_KEY)
+        openai_api_key = _required(values, ENV_OPENAI_API_KEY)
+        openai_base_url = _required(values, ENV_OPENAI_BASE_URL)
+        openai_default_model = _required(values, ENV_OPENAI_DEFAULT_MODEL)
 
         return cls(
             discord_token=discord_token,
-            digitalocean_model_access_key=model_access_key,
+            openai_api_key=openai_api_key,
+            openai_base_url=openai_base_url.rstrip("/"),
+            openai_default_model=openai_default_model,
             discord_guild_id=_optional_int(values, ENV_DISCORD_GUILD_ID),
-            digitalocean_inference_url=_optional_str(
-                values,
-                ENV_DIGITALOCEAN_INFERENCE_URL,
-                DEFAULT_INFERENCE_URL,
-            ).rstrip("/"),
-            digitalocean_default_model=_optional_str(
-                values,
-                ENV_DIGITALOCEAN_DEFAULT_MODEL,
-                DEFAULT_MODEL,
-            ),
             mnemos_admin_user_ids=_int_set(values.get(ENV_MNEMOS_ADMIN_USER_IDS, "")),
             mnemos_allow_discord_admins=_optional_bool(
                 values,

@@ -12,9 +12,9 @@ from mnemos.inference.messages import ChatMessage
 
 
 @dataclass(frozen=True, slots=True)
-class DigitalOceanInferenceClient:
+class InferenceClient:
     base_url: str
-    model_access_key: str
+    api_key: str
     session: aiohttp.ClientSession
     timeout_seconds: float = 60
 
@@ -36,7 +36,7 @@ class DigitalOceanInferenceClient:
         root = _as_mapping(data, "chat completion response")
         choices = _as_sequence(root.get("choices"), "choices")
         if not choices:
-            raise InferenceError("DigitalOcean returned no choices")
+            raise InferenceError("Inference returned no choices")
 
         choice = _as_mapping(choices[0], "choice")
         message = _as_mapping(choice.get("message"), "message")
@@ -47,7 +47,7 @@ class DigitalOceanInferenceClient:
         refusal = message.get("refusal")
         tool_calls = message.get("tool_calls")
         raise InferenceError(
-            "DigitalOcean returned no assistant text "
+            "No assistant text in response "
             f"(finish_reason={finish!r}, "
             f"refusal={refusal!r}, tool_calls present={tool_calls is not None})"
         )
@@ -64,7 +64,7 @@ class DigitalOceanInferenceClient:
     ) -> object:
         url = f"{self.base_url.rstrip('/')}{path}"
         headers = {
-            "Authorization": f"Bearer {self.model_access_key}",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
         timeout = aiohttp.ClientTimeout(total=self.timeout_seconds)
@@ -80,14 +80,13 @@ class DigitalOceanInferenceClient:
                 if response.status < 200 or response.status >= 300:
                     body = await response.text()
                     raise InferenceError(
-                        "DigitalOcean inference failed with "
-                        f"HTTP {response.status}: {body[:300]}"
+                        f"Inference request failed with HTTP {response.status}: {body[:300]}"
                     )
                 return await response.json()
         except TimeoutError as exc:
-            raise InferenceError("DigitalOcean inference timed out") from exc
+            raise InferenceError("Inference request timed out") from exc
         except aiohttp.ClientError as exc:
-            message = f"DigitalOcean inference request failed: {exc}"
+            message = f"Inference request failed: {exc}"
             raise InferenceError(message) from exc
 
 
@@ -112,7 +111,7 @@ def _model_ids_from_response(data: object) -> list[str]:
             raise InferenceError("Invalid model id")
         model_ids.append(model_id.strip())
     if not model_ids:
-        raise InferenceError("DigitalOcean returned no models")
+        raise InferenceError("No models returned")
     return sorted(set(model_ids))
 
 

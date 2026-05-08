@@ -11,7 +11,7 @@ from mnemos.discord.constants import CONTEXT_FAILURE_MESSAGE, INFERENCE_FAILURE_
 from mnemos.discord.context import fetch_recent_context
 from mnemos.discord.responders import detect_trigger
 from mnemos.discord.text import split_discord_message
-from mnemos.inference import DigitalOceanInferenceClient, ModelManager
+from mnemos.inference import InferenceClient, ModelManager
 from mnemos.prompts import build_chat_messages
 from mnemos.storage import SettingsStore
 
@@ -24,7 +24,7 @@ class MnemosDiscordClient(discord.Client):
         *,
         settings: Settings,
         settings_store: SettingsStore,
-        inference_client: DigitalOceanInferenceClient,
+        inference_client: InferenceClient,
         model_manager: ModelManager,
     ) -> None:
         intents = discord.Intents.default()
