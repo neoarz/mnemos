@@ -1,4 +1,4 @@
 from mnemos.prompts.chat import build_chat_messages
-from mnemos.prompts.system import SYSTEM_PROMPT
+from mnemos.prompts.system import build_system_prompt
 
-__all__ = ["SYSTEM_PROMPT", "build_chat_messages"]
+__all__ = ["build_chat_messages", "build_system_prompt"]

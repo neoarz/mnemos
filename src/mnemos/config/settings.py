@@ -13,16 +13,17 @@ from mnemos.config.constants import (
     DEFAULT_MAX_COMPLETION_TOKENS,
     DEFAULT_STATE_PATH,
     DEFAULT_TEMPERATURE,
-    ENV_OPENAI_API_KEY,
-    ENV_OPENAI_BASE_URL,
-    ENV_OPENAI_DEFAULT_MODEL,
     ENV_DISCORD_GUILD_ID,
     ENV_DISCORD_TOKEN,
+    ENV_EXA_API_KEY,
     ENV_MAX_COMPLETION_TOKENS,
     ENV_MAX_CONTEXT_MESSAGES,
     ENV_MNEMOS_ADMIN_USER_IDS,
     ENV_MNEMOS_ALLOW_DISCORD_ADMINS,
     ENV_MNEMOS_STATE_PATH,
+    ENV_OPENAI_API_KEY,
+    ENV_OPENAI_BASE_URL,
+    ENV_OPENAI_DEFAULT_MODEL,
     ENV_TEMPERATURE,
 )
 
@@ -34,6 +35,7 @@ class Settings:
     openai_base_url: str
     openai_default_model: str
     discord_guild_id: int | None = None
+    exa_api_key: str | None = None
     mnemos_admin_user_ids: frozenset[int] = frozenset()
     mnemos_allow_discord_admins: bool = True
     mnemos_state_path: Path = Path(DEFAULT_STATE_PATH)
@@ -63,6 +65,7 @@ class Settings:
             openai_base_url=openai_base_url.rstrip("/"),
             openai_default_model=openai_default_model,
             discord_guild_id=_optional_int(values, ENV_DISCORD_GUILD_ID),
+            exa_api_key=values.get(ENV_EXA_API_KEY, "").strip() or None,
             mnemos_admin_user_ids=_int_set(values.get(ENV_MNEMOS_ADMIN_USER_IDS, "")),
             mnemos_allow_discord_admins=_optional_bool(
                 values,

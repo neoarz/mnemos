@@ -11,7 +11,7 @@ from mnemos.discord.constants import CONTEXT_FAILURE_MESSAGE, INFERENCE_FAILURE_
 from mnemos.discord.context import fetch_recent_context
 from mnemos.discord.responders import detect_trigger
 from mnemos.discord.text import split_discord_message
-from mnemos.inference import InferenceClient, ModelManager
+from mnemos.inference import AgentRunner, ModelManager
 from mnemos.prompts import build_chat_messages
 from mnemos.storage import SettingsStore
 
@@ -24,7 +24,7 @@ class MnemosDiscordClient(discord.Client):
         *,
         settings: Settings,
         settings_store: SettingsStore,
-        inference_client: InferenceClient,
+        agent_runner: AgentRunner,
         model_manager: ModelManager,
     ) -> None:
         intents = discord.Intents.default()
@@ -35,7 +35,7 @@ class MnemosDiscordClient(discord.Client):
         super().__init__(intents=intents)
         self.settings = settings
         self.settings_store = settings_store
-        self.inference_client = inference_client
+        self.agent_runner = agent_runner
         self.model_manager = model_manager
         self.tree = discord.app_commands.CommandTree(self)
 
@@ -95,9 +95,10 @@ class MnemosDiscordClient(discord.Client):
                     author_name=message.author.display_name,
                     user_message=trigger.content,
                     recent_context=recent_context,
+                    tools_enabled=self.agent_runner.tools_enabled,
                 )
                 inference_started_at = time.perf_counter()
-                response = await self.inference_client.complete(
+                response = await self.agent_runner.run(
                     model=self.model_manager.current(),
                     messages=chat_messages,
                     temperature=self.settings.temperature,

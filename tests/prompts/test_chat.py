@@ -15,3 +15,22 @@ def test_build_chat_messages_includes_context_and_current_message() -> None:
     assert "Alice: shipped the bot" in messages[1].content
     assert "Current message from Naz" in messages[1].content
     assert "what happened?" in messages[1].content
+
+
+def test_build_chat_messages_only_advertises_tools_when_enabled() -> None:
+    without_tools = build_chat_messages(
+        author_name="Naz",
+        user_message="read this url",
+        recent_context=[],
+    )
+    with_tools = build_chat_messages(
+        author_name="Naz",
+        user_message="read this url",
+        recent_context=[],
+        tools_enabled=True,
+    )
+
+    assert "web_search" not in without_tools[0].content
+    assert "read_url" not in without_tools[0].content
+    assert "web_search" in with_tools[0].content
+    assert "read_url" in with_tools[0].content
