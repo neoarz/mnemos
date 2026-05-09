@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 
@@ -7,7 +8,11 @@ import discord
 from mnemos.app.errors import InferenceError
 from mnemos.config import Settings
 from mnemos.discord.commands import register_commands
-from mnemos.discord.constants import CONTEXT_FAILURE_MESSAGE, INFERENCE_FAILURE_MESSAGE
+from mnemos.discord.constants import (
+    CONTEXT_FAILURE_MESSAGE,
+    INFERENCE_FAILURE_MESSAGE,
+    TYPING_TIMEOUT_SECONDS,
+)
 from mnemos.discord.context import fetch_recent_context
 from mnemos.discord.responders import detect_trigger
 from mnemos.discord.text import split_discord_message
@@ -16,6 +21,15 @@ from mnemos.prompts import build_chat_messages
 from mnemos.storage import SettingsStore
 
 log = logging.getLogger("mnemos.discord")
+
+
+async def _show_typing_once(channel: discord.abc.Messageable) -> None:
+    try:
+        await asyncio.wait_for(channel.typing(), timeout=TYPING_TIMEOUT_SECONDS)
+    except TimeoutError:
+        log.debug("Timed out while sending typing indicator")
+    except discord.DiscordException:
+        log.debug("Failed to send typing indicator", exc_info=True)
 
 
 class MnemosDiscordClient(discord.Client):
@@ -83,44 +97,44 @@ class MnemosDiscordClient(discord.Client):
             return
 
         log.info("Responding to %s in %s", message.author, message.channel)
-        async with message.channel.typing():
-            try:
-                context_started_at = time.perf_counter()
-                recent_context = await fetch_recent_context(
-                    message,
-                    limit=self.settings.max_context_messages,
-                )
-                context_seconds = time.perf_counter() - context_started_at
-                chat_messages = build_chat_messages(
-                    author_name=message.author.display_name,
-                    user_message=trigger.content,
-                    recent_context=recent_context,
-                    tools_enabled=self.agent_runner.tools_enabled,
-                )
-                inference_started_at = time.perf_counter()
-                response = await self.agent_runner.run(
-                    model=self.model_manager.current(),
-                    messages=chat_messages,
-                    temperature=self.settings.temperature,
-                    max_completion_tokens=self.settings.max_completion_tokens,
-                )
-                inference_seconds = time.perf_counter() - inference_started_at
-                log.info(
-                    "Generated response in %.2fs "
-                    "(context=%.2fs, inference=%.2fs, context_messages=%s, "
-                    "response_chars=%s)",
-                    time.perf_counter() - started_at,
-                    context_seconds,
-                    inference_seconds,
-                    len(recent_context),
-                    len(response),
-                )
-            except InferenceError:
-                log.exception("Inference failed")
-                response = INFERENCE_FAILURE_MESSAGE
-            except discord.DiscordException:
-                log.exception("Discord context fetch failed")
-                response = CONTEXT_FAILURE_MESSAGE
+        await _show_typing_once(message.channel)
+        try:
+            context_started_at = time.perf_counter()
+            recent_context = await fetch_recent_context(
+                message,
+                limit=self.settings.max_context_messages,
+            )
+            context_seconds = time.perf_counter() - context_started_at
+            chat_messages = build_chat_messages(
+                author_name=message.author.display_name,
+                user_message=trigger.content,
+                recent_context=recent_context,
+                tools_enabled=self.agent_runner.tools_enabled,
+            )
+            inference_started_at = time.perf_counter()
+            response = await self.agent_runner.run(
+                model=self.model_manager.current(),
+                messages=chat_messages,
+                temperature=self.settings.temperature,
+                max_completion_tokens=self.settings.max_completion_tokens,
+            )
+            inference_seconds = time.perf_counter() - inference_started_at
+            log.info(
+                "Generated response in %.2fs "
+                "(context=%.2fs, inference=%.2fs, context_messages=%s, "
+                "response_chars=%s)",
+                time.perf_counter() - started_at,
+                context_seconds,
+                inference_seconds,
+                len(recent_context),
+                len(response),
+            )
+        except InferenceError:
+            log.exception("Inference failed")
+            response = INFERENCE_FAILURE_MESSAGE
+        except discord.DiscordException:
+            log.exception("Discord context fetch failed")
+            response = CONTEXT_FAILURE_MESSAGE
 
         send_started_at = time.perf_counter()
         try:
